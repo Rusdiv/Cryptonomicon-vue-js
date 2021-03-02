@@ -19,6 +19,7 @@
                 placeholder="Например DOGE"
               />
             </div>
+            <div class="text-red-600">{{ error }}</div>
           </div>
         </div>
         <button
@@ -41,6 +42,7 @@
           </svg>
           Добавить
         </button>
+        <button @click="hints">Получить ответ</button>
       </section>
 
       <template v-if="tickers.length">
@@ -139,31 +141,37 @@ export default {
       tickers: [],
       selected: "",
       graph: [],
+      error: "",
     };
   },
   methods: {
     add() {
-      const newTicker = {
-        name: this.ticker,
-        price: "-",
-      };
+      if (this.ticker === "") {
+        this.error = "Ваше поле пустое";
+      } else {
+        this.error = "";
+        const newTicker = {
+          name: this.ticker,
+          price: "-",
+        };
 
-      setInterval(async () => {
-        const f = await fetch(
-          `https://min-api.cryptocompare.com/data/price?fsym=${newTicker.name}&tsyms=USD&api_key=e80fc186785489c346a1cdce2d3cf066b4ab4fb305ee21982d48e06a8c19e447`
-        );
+        setInterval(async () => {
+          const f = await fetch(
+            `https://min-api.cryptocompare.com/data/price?fsym=${newTicker.name}&tsyms=USD&api_key=e80fc186785489c346a1cdce2d3cf066b4ab4fb305ee21982d48e06a8c19e447`
+          );
 
-        const data = await f.json();
+          const data = await f.json();
 
-        this.tickers.find((t) => t.name === newTicker.name).price =
-          data.USD > 1 ? data.USD.toFixed(2) : data.USD.toPrecision(2);
+          this.tickers.find((t) => t.name === newTicker.name).price =
+            data.USD > 1 ? data.USD.toFixed(2) : data.USD.toPrecision(2);
 
-        if (this.selected?.name === newTicker.name) {
-          this.graph.push(data.USD);
-        }
-      }, 2000);
-      this.tickers.push(newTicker);
-      this.ticker = "";
+          if (this.selected?.name === newTicker.name) {
+            this.graph.push(data.USD);
+          }
+        }, 2000);
+        this.tickers.push(newTicker);
+        this.ticker = "";
+      }
     },
 
     remove(tickerToRemove) {
@@ -178,10 +186,19 @@ export default {
       );
     },
 
+    hints() {
+      async () => {
+        const answer = await fetch(
+          "https://min-api.cryptocompare.com/data/all/coinlist?summary=true"
+        );
+        const data = answer.json();
+        console.log(data);
+      };
+    },
+
     select(ticker) {
       (this.selected = ticker), (this.graph = []);
     },
   },
 };
 </script>
-
